@@ -8,12 +8,12 @@ module.exports = class Client {
             lives: 3,
             averageTargetSize: 45,
             targetSizeNoise: 10,
-            initialTargetTimer: 1500,
+            initialTargetTime: 3000,
             fakeTargetChance: 10,
-            fakeTargetTimer: 500,
-            approvalTimer: 500,
-            perLevelPointsLimit: 150,
-            perLevelTimeReduction: 250
+            fakeTargetTime: 250,
+            approvalTime: 500,
+            levelPoints: 150,
+            timeReductionRate: 0.25
         };
         this.stats = {
             running: false,
@@ -21,6 +21,7 @@ module.exports = class Client {
             level: 1,
             points: 0,
             suspicion: 0,
+            targetTime: 0,
             missedShots: 0,
             totalTargets: 0,
             totalFakeTargets: 0,
@@ -34,8 +35,9 @@ module.exports = class Client {
             case 'options':
                 this.options = payload;
                 this.stats.lives = this.options.lives;
-                this.targetAdd(this.targetRandom());
+                this.stats.targetTime = this.options.initialTargetTime;
                 this.stats.running = true;
+                this.targetAdd(this.targetRandom());
                 this.sendStats();
                 break;
             case 'mouseClicked':
@@ -68,8 +70,8 @@ module.exports = class Client {
 
     onShotMissed() {
         this.stats.points -= 45;
-        this.updateLevel();
         this.stats.missedShots++;
+        this.updateLevel();
         this.sendStats();
     }
 
@@ -78,7 +80,7 @@ module.exports = class Client {
             this.stats.lives--;
 
             if (this.stats.lives === 0) {
-                this.stats.running = false;
+                this.end();
             }
         }
 
@@ -90,7 +92,14 @@ module.exports = class Client {
     }
 
     updateLevel() {
-        this.stats.level = Math.floor(this.stats.points / this.options.perLevelPointsLimit) + 1;
+        let previousLevel = this.stats.level;
+        this.stats.level = Math.floor(this.stats.points / this.options.levelPoints) + 1;
+
+        if (this.stats.level > previousLevel) {
+            this.stats.targetTime -= this.stats.targetTime * this.options.timeReductionRate;
+        } else if (this.stats.level < previousLevel) {
+            this.stats.targetTime += this.stats.targetTime * this.options.timeReductionRate / (1 - this.options.timeReductionRate);
+        }
     }
 
     mouseClicked({ x, y }) {
@@ -117,42 +126,57 @@ module.exports = class Client {
     targetRandom() {
         return {
             id: Math.random(),
-            x: Math.random() * this.options.width,
-            y: Math.random() * this.options.height,
+            x: Math.round(Math.random() * this.options.width),
+            y: Math.round(Math.random() * this.options.height),
             real: Math.random() < 1 / this.options.fakeTargetChance ? false : true,
-            radius: this.options.averageTargetSize,
+            radius: this.options.averageTargetSize + (Math.random() * this.options.targetSizeNoise * Math.pow(-1, Math.floor(Math.random() * 2) + 1)),
             approved: false,
         };
     }
 
     targetAdd(target) {
-        this.targets[target.id] = target;
-        this.send('targetAdd', {
-            id: target.id,
-            x: target.x,
-            y: target.y,
-            radius: target.radius,
-        });
+        if (this.stats.running) {
+            this.targets[target.id] = target;
+            this.send('targetAdd', {
+                id: target.id,
+                x: target.x,
+                y: target.y,
+                radius: target.radius,
+            });
+
+            setTimeout(() => {
+                if (!target.approved) {
+                    console.log('Target was not approved!');
+
+                    this.targetRemove(target.id);
+                    this.targetAdd(this.targetRandom());
+                }
+            }, this.options.approvalTime);
+        }
     }
 
     targetApprove(id) {
-        let target = this.targets[id];
-        let expirationTime = target.real
-            ? this.options.initialTargetTimer - this.stats.level * this.options.perLevelTimeReduction
-            : this.options.fakeTargetTimer
-        ;
-        target.approved = true;
+        if (this.stats.running) {
+            let target = this.targets[id];
+            let expirationTime = target.real
+                ? this.stats.targetTime
+                : this.options.fakeTargetTime
+            ;
+            target.approved = true;
 
-        setTimeout(() => {
-            if (id in this.targets) {
-                this.onTargetExpired(target);
-            }
-        }, expirationTime);
+            setTimeout(() => {
+                if (id in this.targets) {
+                    this.onTargetExpired(target);
+                }
+            }, expirationTime);
+        }
     }
 
     targetRemove(id) {
-        delete this.targets[id];
-        this.send('targetRemove', id);
+        if (this.stats.running) {
+            delete this.targets[id];
+            this.send('targetRemove', id);
+        }
     }
 
     sendStats() {
@@ -163,7 +187,8 @@ module.exports = class Client {
         this.socket.send(JSON.stringify({key, payload}));
     }
 
-    close() {
-        this.socket.close();
+    end() {
+        this.stats.running = false;
+        this.sendStats();
     }
 }

@@ -36,6 +36,9 @@ let newGame = () => {
         switch(message.key) {
             case 'stats':
                 stats = message.payload;
+                if (!stats.running) {
+                    gameOver();
+                }
                 break;
             case 'targetAdd':
                 targets[message.payload.id] = message.payload;
@@ -53,3 +56,10 @@ let newGame = () => {
         }
     }
 }
+
+let gameOver = () => {
+    socket.close();
+    stats = {};
+    targets = {};
+    socket = null;
+};

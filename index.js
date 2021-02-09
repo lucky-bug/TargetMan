@@ -2,9 +2,7 @@ const express = require('express');
 const http = require('http');
 const WebSocket = require('ws');
 
-const Client = require('./src/Client.js');
-// const GameManager = require('./src/Services/GameManager.js');
-// const TargetManager = require('./src/Services/TargetManager.js');
+const Game = require('./src/Game.js');
 
 const port = 3000;
 const app = express();
@@ -14,7 +12,17 @@ const serverSocket = new WebSocket.Server({
 });
 
 serverSocket.on('connection', (socket) => {
-    new Client(socket);
+    let game = new Game(socket);
+    console.log('Game Started!');
+
+    socket.onclose = () => {
+        console.log(game.stats);
+        console.log('Game Ended!');
+
+        game.end();
+
+        delete game;
+    };
 });
 
 app.use(express.static('client'));

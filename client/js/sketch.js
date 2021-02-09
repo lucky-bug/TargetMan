@@ -30,8 +30,8 @@ function mouseClicked() {
         socket.send(JSON.stringify({
             key: 'mouseClicked',
             payload: {
-                x: mouseX,
-                y: mouseY,
+                x: Math.round(mouseX),
+                y: Math.round(mouseY),
             },
         }));
     }

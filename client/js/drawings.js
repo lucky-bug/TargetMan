@@ -45,8 +45,8 @@ function drawStats({color = '#aaa', fontFamily = 'monospace'} = {}) {
 
     debug = Object.assign({
         fps: Math.round(frameRate()),
-        size: `${width}x${height}`,
-        mouse: `${mouseX}x${mouseY}`,
+        size: `${width} x ${height}`,
+        mouse: `${mouseX} x ${mouseY}`,
         targets: Object.values(targets).length,
     }, stats);
 
