@@ -9,23 +9,53 @@ const options = {
         max: 10,
         step: 1,
     },
+    'averageTargetSize': {
+        id: 'averageTargetSize',
+        label: 'Average Target Size',
+        type: 'number',
+        unit: 'pixel',
+        value: 45,
+        min: 16,
+        max: 128,
+        step: 1,
+    },
+    'targetSizeNoise': {
+        id: 'targetSizeNoise',
+        label: 'Target Size Noise',
+        type: 'number',
+        unit: 'pixel',
+        value: 10,
+        min: 0,
+        max: 15,
+        step: 1,
+    },
     'initialTargetTimer': {
         id: 'initialTargetTimer',
         label: 'Target Timer',
         type: 'number',
         unit: 'ms',
-        value: 1500,
+        value: 3000,
         min: 500,
         max: 3000,
         step: 100,
+    },
+    'fakeTargetChance': {
+        id: 'fakeTargetChance',
+        label: 'Fake Target Chance',
+        type: 'number',
+        unit: '1/x',
+        value: 10,
+        min: 1,
+        max: 100,
+        step: 1,
     },
     'fakeTargetTimer': {
         id: 'fakeTargetTimer',
         label: 'Fake Timer',
         type: 'number',
         unit: 'ms',
-        value: 500,
-        min: 100,
+        value: 50,
+        min: 50,
         max: 1000,
         step: 50,
     },
@@ -71,6 +101,7 @@ for (let option of Object.values(options)) {
 
     optionDiv.className = 'option';
     label.innerText = `${option.label} (${option.unit}):`;
+    label.setAttribute('for', option.id);
     input.id = option.id;
     input.name = option.id;
     input.type = option.type;

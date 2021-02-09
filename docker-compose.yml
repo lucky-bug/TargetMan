@@ -1,0 +1,14 @@
+version: '3.9'
+
+services:
+  app:
+    build:
+      context: .
+      args:
+        uid: ${USER_ID:-1000}
+        gid: ${GROUP_ID:-1000}
+    volumes:
+      - .:/home/app/src
+    ports:
+      - ${PORT:-3000}:3000
+    tty: true

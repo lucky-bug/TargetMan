@@ -1,9 +1,9 @@
-function drawCursor(x, y, { size = 16, color = '#ccc' } = {}) {
+function drawCursor(x, y, { size = 16, color = '#0066aa' } = {}) {
     push();
 
     stroke(color);
     fill(color);
-    strokeWeight(1.5);
+    strokeWeight(3);
     noStroke();
     circle(x, y, 3);
     stroke(color);
@@ -35,7 +35,7 @@ function drawTarget(x, y, radius, { bordered = false, borderColor = '#9e9e9e', c
     pop();
 }
 
-function drawStats({color = '#bbb', fontFamily = 'Press Start'} = {}) {
+function drawStats({color = '#aaa', fontFamily = 'monospace'} = {}) {
     push();
     fill(color);
     textFont(fontFamily);
@@ -43,8 +43,15 @@ function drawStats({color = '#bbb', fontFamily = 'Press Start'} = {}) {
 
     let i = 0;
 
-    for (let stat in stats) {
-        text(`${stat}: ${stats[stat]}`, 10, 20 * ++i);
+    debug = Object.assign({
+        fps: Math.round(frameRate()),
+        size: `${width}x${height}`,
+        mouse: `${mouseX}x${mouseY}`,
+        targets: Object.values(targets).length,
+    }, stats);
+
+    for (let stat in debug) {
+        text(`${stat}: ${debug[stat]}`, 10, 20 * ++i);
     }
 
     pop();

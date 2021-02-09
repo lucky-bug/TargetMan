@@ -18,9 +18,33 @@ function draw() {
             drawTarget(target.x, target.y, target.radius);
         }
 
-        drawCursor(mouseX, mouseY);
         drawStats();
+        drawCursor(mouseX, mouseY);
     } else if (menu.classList.contains('hidden')) {
         menu.classList.toggle('hidden');
     }
 }
+
+function mouseClicked() {
+    if (stats.running) {
+        socket.send(JSON.stringify({
+            key: 'mouseClicked',
+            payload: {
+                x: mouseX,
+                y: mouseY,
+            },
+        }));
+    }
+}
+
+/*
+function mouseMoved() {
+    socket.send(JSON.stringify({
+        key: 'mouseMoved',
+        payload: {
+            x: mouseX,
+            y: mouseY,
+        },
+    }));
+}
+*/

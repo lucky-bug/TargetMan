@@ -21,10 +21,12 @@ let newGame = () => {
     }
 
     socket.onclose = () => {
+        stats.running = false;
         console.log('Connection closed!');
     }
 
     socket.onerror = () => {
+        stats.running = false;
         console.log('Connection error!');
     }
 
@@ -35,11 +37,15 @@ let newGame = () => {
             case 'stats':
                 stats = message.payload;
                 break;
-            case 'target.add':
+            case 'targetAdd':
                 targets[message.payload.id] = message.payload;
+                socket.send(JSON.stringify({
+                    key: 'targetApprove',
+                    payload: message.payload.id,
+                }));
                 break;
-            case 'target.remove':
-                delete targets[message.payload.id];
+            case 'targetRemove':
+                delete targets[message.payload];
                 break;
             default:
                 console.log(message.payload);
