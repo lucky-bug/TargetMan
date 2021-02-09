@@ -1,5 +1,5 @@
 {
-  "name": "shooter",
+  "name": "targetman",
   "version": "1.0.0",
   "description": "Simple target shooting game.",
   "main": "index.js",
