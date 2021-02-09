@@ -43,6 +43,22 @@ Visit [http://localhost:3000](http://localhost:3000) to play the game.
 
 You can change game options according to your needs.
 
+## Bots
+
+The game also have bots integrated in it. Currently there is only one, but more comming soon.
+
+Run the following code in browser's developer tools terminal to start the bot.
+
+```js
+botUp();
+```
+
+Run the following code to stop it.
+
+```js
+botDown();
+```
+
 ## Technologies
 
 Technologies that were used in this project are as follows:
