@@ -1,4 +1,5 @@
 const express = require('express');
+const fs = require('fs');
 const http = require('http');
 const WebSocket = require('ws');
 
@@ -11,13 +12,32 @@ const serverSocket = new WebSocket.Server({
     server
 });
 
+const outputFile = 'output.csv';
+
+function saveCSV(obj) {
+    let str = '';
+
+    for (let key in obj) {
+        str += ',' + obj[key];
+    }
+
+    str = str.substr(1);
+
+    fs.appendFile(outputFile, str + '\n', function (err) {
+        if (err) throw err;
+    });
+}
+
 serverSocket.on('connection', (socket) => {
     let game = new Game(socket);
-    console.log('Game Started!');
+    // console.log('Game Started!');
 
     socket.onclose = () => {
         console.log(game.stats);
-        console.log('Game Ended!');
+
+        saveCSV(game.stats);
+
+        // console.log('Game Ended!');
 
         game.end();
 
