@@ -12,7 +12,7 @@ function botUp(id = 0) {
         previousCallback = socket.onmessage;
     }
 
-    switch(id) {
+    switch (id) {
         case 0:
             socket.onmessage = event => {
                 let message = JSON.parse(event.data);
@@ -22,6 +22,22 @@ function botUp(id = 0) {
                         mouseY = message.payload.y;
                         mouseClicked();
                     }, 250);
+                }
+                previousCallback(event);
+            };
+
+            currentBotId = id;
+
+            break;
+        case 1:
+            socket.onmessage = event => {
+                let message = JSON.parse(event.data);
+                if (message.key === 'targetAdd') {
+                    setTimeout(() => {
+                        mouseX = message.payload.x;
+                        mouseY = message.payload.y;
+                        mouseClicked();
+                    }, Math.random() * 500 + 50);
                 }
                 previousCallback(event);
             };

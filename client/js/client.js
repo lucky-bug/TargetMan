@@ -30,10 +30,10 @@ let newGame = () => {
         console.log('Connection error!');
     }
 
-    socket.onmessage = ({data}) => {
+    socket.onmessage = ({ data }) => {
         let message = JSON.parse(data);
 
-        switch(message.key) {
+        switch (message.key) {
             case 'stats':
                 stats = message.payload;
                 if (!stats.running) {

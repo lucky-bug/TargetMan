@@ -1,3 +1,5 @@
+const fs = require('fs');
+
 module.exports = class Client {
     constructor(socket) {
         this.socket = socket;
@@ -31,7 +33,7 @@ module.exports = class Client {
     }
 
     onMessage({ key, payload }) {
-        switch(key) {
+        switch (key) {
             case 'options':
                 this.options = payload;
                 this.stats.lives = this.options.lives;
@@ -59,6 +61,10 @@ module.exports = class Client {
             this.updateLevel();
         } else {
             this.stats.suspicion += this.stats.suspicion + 1;
+
+            if (this.stats.suspicion > 1000) {
+                this.end();
+            }
         }
 
         this.targetRemove(target.id);
@@ -78,10 +84,10 @@ module.exports = class Client {
     onTargetExpired(target) {
         if (target.real) {
             this.stats.lives--;
+        }
 
-            if (this.stats.lives === 0) {
-                this.end();
-            }
+        if (this.stats.lives === 0) {
+            this.end();
         }
 
         this.targetRemove(target.id);
@@ -124,7 +130,7 @@ module.exports = class Client {
     }
 
     targetRandom() {
-        return {
+        let target = {
             id: Math.random(),
             x: Math.round(Math.random() * this.options.width),
             y: Math.round(Math.random() * this.options.height),
@@ -132,6 +138,11 @@ module.exports = class Client {
             radius: this.options.averageTargetSize + (Math.random() * this.options.targetSizeNoise * Math.pow(-1, Math.floor(Math.random() * 2) + 1)),
             approved: false,
         };
+
+        this.stats.totalTargets++;
+        this.stats.totalFakeTargets += target.real ? 0 : 1;
+
+        return target;
     }
 
     targetAdd(target) {
@@ -158,10 +169,9 @@ module.exports = class Client {
     targetApprove(id) {
         if (this.stats.running) {
             let target = this.targets[id];
-            let expirationTime = target.real
-                ? this.stats.targetTime
-                : this.options.fakeTargetTime
-            ;
+            let expirationTime = target.real ? this.stats.targetTime : this.options.fakeTargetTime;
+            this.stats.totalApprovedTargets++;
+
             target.approved = true;
 
             setTimeout(() => {
@@ -179,15 +189,32 @@ module.exports = class Client {
         }
     }
 
+    statsToCSV() {
+        let outputFile = 'data.csv';
+        let str = '';
+
+        for (let key in this.stats) {
+            str += ',' + this.stats[key];
+        }
+
+        str = str.substr(1);
+
+        fs.appendFile(outputFile, str + '\n', function (err) {
+            if (err) throw err;
+        });
+    }
+
     sendStats() {
+        this.statsToCSV();
         this.send('stats', this.stats);
     }
 
     send(key, payload) {
-        this.socket.send(JSON.stringify({key, payload}));
+        this.socket.send(JSON.stringify({ key, payload }));
     }
 
     end() {
+        this.statsToCSV();
         this.stats.running = false;
         this.sendStats();
     }
